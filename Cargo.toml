@@ -1,11 +1,13 @@
 [package]
-name = "Data-Org"
+name = "data-org"
 version = "0.1.0"
-authors = ["theblackcat98"]
+authors = ["theblackcat98", "Rift7"]
+edition = "2021"
 
-
-[workspace]
 
 [dependencies]
 crossterm = "0.27.0"
+hashmap = "0.0.1"
 ratatui = "0.26.0"
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
