@@ -26,7 +26,7 @@ use crate::{
 fn main() -> Result<(), Box<dyn Error>> {
     // setup terminal
     enable_raw_mode()?;
-    let mut stderr = io::stderr(); // This is a special case. Normally using stdout is fine
+    let mut stderr = io::stderr();
     execute!(stderr, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stderr);
     let mut terminal = Terminal::new(backend)?;
@@ -45,12 +45,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
     terminal.show_cursor()?;
 
-    if let Ok(do_print) = res {
-        if do_print {
-            app.print_json()?;
+    match res {
+        Ok(do_print) if do_print => {
+            App::new().print_json()?;
         }
-    } else if let Err(err) = res {
-        println!("{err:?}");
+        Err(err) => eprintln!("Error: {}", err),
+        _ => {}
     }
 
     Ok(())
@@ -68,6 +68,7 @@ fn run_app<B: Backend>(
                 // Skip events that are not KeyEventKind::Press
                 continue;
             }
+
             match app.current_screen {
                 CurrentScreen::Main => match key.code {
                     KeyCode::Char('e') => {
@@ -76,6 +77,14 @@ fn run_app<B: Backend>(
                     }
                     KeyCode::Char('q') => {
                         app.current_screen = CurrentScreen::Exiting;
+                    }
+                    KeyCode::Char('l') => {
+                        // Load from file when 'l' is pressed
+                        let json_file_path = "./test.json";
+                        match app.load_from_json(json_file_path) {
+                            Ok(_) => println!("Data loaded successfully"),
+                            Err(e) => eprintln!("Error loading data: {}", e),
+                        }
                     }
                     _ => {}
                 },
