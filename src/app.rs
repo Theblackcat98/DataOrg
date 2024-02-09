@@ -6,11 +6,17 @@ pub enum CurrentScreen {
     Main,
     Editing,
     Exiting,
+    Loading,
 }
 
 pub enum CurrentlyEditing {
     Key,
     Value,
+}
+
+pub enum CurrentlyLoading {
+    Load,
+    Done,
 }
 
 pub struct App {
@@ -19,6 +25,7 @@ pub struct App {
     pub pairs: HashMap<String, String>, // The representation of our key and value pairs with serde Serialize support
     pub current_screen: CurrentScreen, // the current screen the user is looking at, and will later determine what is rendered.
     pub currently_editing: Option<CurrentlyEditing>, // the optional state containing which of the key or value pair the user is editing. It is an option, because when the user is not directly editing a key-value pair, this will be set to `None`.
+    pub currently_loading: Option<CurrentlyLoading>,
     pub print_json: String,
 }
 
@@ -30,6 +37,7 @@ impl App {
             pairs: HashMap::new(),
             current_screen: CurrentScreen::Main,
             currently_editing: None,
+            currently_loading: None,
             print_json: String::new(),
         }
     }
@@ -74,6 +82,20 @@ impl App {
         }
     }
 
+    pub fn toggle_loading(&mut self) {
+        if let Some(load_mode) = &self.currently_loading {
+            match load_mode {
+                CurrentlyLoading::Load => {
+                    self.currently_loading = Some(CurrentlyLoading::Load)
+                }
+                CurrentlyLoading::Done => {
+                    self.currently_loading = Some(CurrentlyLoading::Done)
+                }
+            };
+        } else {
+            self.currently_loading = Some(CurrentlyLoading::Done);
+        }
+    }
 
     pub fn print_json(&self) -> Result<(), serde_json::Error> {
         let output = serde_json::to_string(&self.pairs)?;

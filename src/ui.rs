@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{App, CurrentScreen, CurrentlyEditing};
+use crate::app::{App, CurrentScreen, CurrentlyEditing, CurrentlyLoading};
 
 pub fn ui(f: &mut Frame, app: &App) {
     // Create the layout sections.
@@ -51,6 +51,9 @@ pub fn ui(f: &mut Frame, app: &App) {
             CurrentScreen::Editing => {
                 Span::styled("Editing Mode", Style::default().fg(Color::Yellow))
             }
+            CurrentScreen::Loading => {
+                Span::styled("Loading . . .", Style::default().fg(Color::Yellow))
+            }
             CurrentScreen::Exiting => {
                 Span::styled("Exiting", Style::default().fg(Color::LightRed))
             }
@@ -76,6 +79,24 @@ pub fn ui(f: &mut Frame, app: &App) {
                     "Not Editing Anything",
                     Style::default().fg(Color::DarkGray),
                 )
+                };
+        
+            if let Some(loading) = &app.currently_loading {
+                match loading {
+                    CurrentlyLoading::Load => Span::styled(
+                        "Loading json File!",
+                        Style::default().fg(Color::Magenta),
+                    ),
+                    CurrentlyLoading::Done => Span::styled(
+                        "File loaded Successfully!",
+                        Style::default().fg(Color::Magenta),
+                    ),
+                }
+            } else {
+                Span::styled(
+                    "Not Editing Anything",
+                    Style::default().fg(Color::DarkGray),
+                )
             }
         },
     ];
@@ -94,6 +115,10 @@ pub fn ui(f: &mut Frame, app: &App) {
                 Style::default().fg(Color::Red),
             ),
             CurrentScreen::Exiting => Span::styled(
+                "(q) to quit / (e) to make new pair",
+                Style::default().fg(Color::Red),
+            ),
+            CurrentScreen::Loading => Span::styled(
                 "(q) to quit / (e) to make new pair",
                 Style::default().fg(Color::Red),
             ),

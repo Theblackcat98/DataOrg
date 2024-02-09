@@ -19,7 +19,7 @@ use ratatui::{
 mod app;
 mod ui;
 use crate::{
-    app::{App, CurrentScreen, CurrentlyEditing},
+    app::{App, CurrentScreen, CurrentlyEditing, CurrentlyLoading},
     ui::ui,
 };
 
@@ -82,8 +82,13 @@ fn run_app<B: Backend>(
                         // Load from file when 'l' is pressed
                         let json_file_path = "./test.json";
                         match app.load_from_json(json_file_path) {
-                            Ok(_) => println!("Data loaded successfully"),
-                            Err(e) => eprintln!("Error loading data: {}", e),
+                            Ok(_) => {
+                                app.current_screen = CurrentScreen::Loading;
+                                app.currently_loading = Some(CurrentlyLoading::Load);
+                            }
+                            Err(_) => {
+                                // Handle the error case if needed
+                            }
                         }
                     }
                     _ => {}
@@ -96,6 +101,73 @@ fn run_app<B: Backend>(
                         return Ok(false);
                     }
                     _ => {}
+                },
+                CurrentScreen::Loading if key.kind == KeyEventKind::Press => {
+                    match key.code {
+                        KeyCode::Char('l') => {
+                            if let Some(loading) = &app.currently_loading {
+                                match loading {
+                                    CurrentlyLoading::Load => {
+                                        app.currently_loading =
+                                            Some(CurrentlyLoading::Done);
+                                    }
+                                    CurrentlyLoading::Load => {
+                                        app.toggle_loading();
+                                        app.current_screen =
+                                            CurrentScreen::Main;
+                                    },
+                                    &CurrentlyLoading::Done => todo!()
+                                }
+                            }
+                        }
+                        KeyCode::Enter => {
+                            if let Some(editing) = &app.currently_editing {
+                                match editing {
+                                    CurrentlyEditing::Key => {
+                                        app.currently_editing =
+                                            Some(CurrentlyEditing::Value);
+                                    }
+                                    CurrentlyEditing::Value => {
+                                        app.save_key_value();
+                                        app.current_screen =
+                                            CurrentScreen::Main;
+                                    }
+                                }
+                            }
+                        }
+                        KeyCode::Backspace => {
+                            if let Some(editing) = &app.currently_editing {
+                                match editing {
+                                    CurrentlyEditing::Key => {
+                                        app.key_input.pop();
+                                    }
+                                    CurrentlyEditing::Value => {
+                                        app.value_input.pop();
+                                    }
+                                }
+                            }
+                        }
+                        KeyCode::Esc => {
+                            app.current_screen = CurrentScreen::Main;
+                            app.currently_editing = None;
+                        }
+                        KeyCode::Tab => {
+                            app.toggle_editing();
+                        }
+                        KeyCode::Char(value) => {
+                            if let Some(editing) = &app.currently_editing {
+                                match editing {
+                                    CurrentlyEditing::Key => {
+                                        app.key_input.push(value);
+                                    }
+                                    CurrentlyEditing::Value => {
+                                        app.value_input.push(value);
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
                 },
                 CurrentScreen::Editing if key.kind == KeyEventKind::Press => {
                     match key.code {
